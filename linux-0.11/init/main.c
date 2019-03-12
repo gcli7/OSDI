@@ -137,7 +137,7 @@ void main(void)		/* This really IS void, no error here. */
 	hd_init();
 	floppy_init();
 	sti();
-	panic(""); 
+	//panic(""); 
 	move_to_user_mode();
 	if (!fork()) {		/* we count on this going ok */
 		init();

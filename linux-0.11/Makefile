@@ -34,11 +34,11 @@ MATH	=kernel/math/math.a
 LIBS	=lib/lib.a
 
 .c.s:
-@$(CC) $(CFLAGS) -S -o $*.s $<
+	@$(CC) $(CFLAGS) -S -o $*.s $<
 .s.o:
-@$(AS)  -o $*.o $<
+	@$(AS)  -o $*.o $<
 .c.o:
-@$(CC) $(CFLAGS) -c -o $*.o $<
+	@$(CC) $(CFLAGS) -c -o $*.o $<
 
 all:	Image	
 

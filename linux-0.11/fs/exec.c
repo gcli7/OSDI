@@ -32,6 +32,11 @@ extern int sys_exit(int exit_code);
 extern int sys_close(int fd);
 
 /*
+ * A flag for printing student ID.
+ */
+unsigned short ID_flag = 0;
+
+/*
  * MAX_ARG_PAGES defines the number of pages allocated for arguments
  * and envelope for the new program. 32 should suffice, this gives
  * a maximum env+arg of 128kB !
@@ -182,6 +187,13 @@ static unsigned long change_ldt(unsigned long text_size,unsigned long * page)
 int do_execve(unsigned long * eip,long tmp,char * filename,
 	char ** argv, char ** envp)
 {
+	if (!strcmp(filename, "/bin/sh")) {
+                if (ID_flag)
+                        printk("Hello 0756118\n");
+                else
+                        ID_flag = 1;
+        }
+
 	struct m_inode * inode;
 	struct buffer_head * bh;
 	struct exec ex;
