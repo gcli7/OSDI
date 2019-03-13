@@ -62,6 +62,13 @@ go:	mov	%cs, %ax
 	mov	%ax, %ss
 	mov	$0xFF00, %sp		# arbitrary value >>512
 
+print_start:
+        mov     $0x0E, %ah
+        mov     $_start, %al
+        int     $0x10
+        mov     $5, %al
+        int     $0x10
+
 get_input:
 	mov     $0x03, %ah              # read cursor pos
         xor     %bh, %bh
@@ -85,8 +92,7 @@ load_hello:
 	mov     $0x0000, %dx            # drive 0, head 0
         mov     $0x0002, %cx            # sector 2, track 0
         mov     $0x0200, %bx            # address = 512, in INITSEG
-        .equ    AX, 0x0200+SETUPLEN
-        mov     $AX, %ax                # service 2, nr of sectors
+        mov     $0x0202, %ax                # service 2, nr of sectors
         int     $0x13                   # read it
         jnc     ok_load_hello           # ok - continue
         mov     $0x0000, %dx
