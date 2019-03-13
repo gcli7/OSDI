@@ -15,6 +15,7 @@ _start:
     #lea    msg1, %bp
     mov     $msg1, %bp
     mov $0x1301, %ax        # write string, move cursor
+    mov $2, %bl
     int $0x10
 end_hello:
     jmp end_hello
