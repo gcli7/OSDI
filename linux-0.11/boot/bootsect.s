@@ -62,12 +62,58 @@ go:	mov	%cs, %ax
 	mov	%ax, %ss
 	mov	$0xFF00, %sp		# arbitrary value >>512
 
+get_input:
+	mov     $0x03, %ah              # read cursor pos
+        xor     %bh, %bh
+        int     $0x10
+        mov     $54, %cx
+        mov     $0x0007, %bx            # page 0, attribute 7 (normal)
+        #lea    msg_retype, %bp
+        mov     $msg_retype, %bp
+        mov     $0x1301, %ax            # write string, move cursor
+        int     $0x10
+
+	mov	$0x00, %ah		# get input character
+	int	$0x16
+	cmp	$49, %al
+	je	load_setup
+	cmp	$50, %al
+	je	load_hello
+	jmp	get_input
+
+load_hello:
+	mov     $0x0000, %dx            # drive 0, head 0
+        mov     $0x0002, %cx            # sector 2, track 0
+        mov     $0x0200, %bx            # address = 512, in INITSEG
+        .equ    AX, 0x0200+SETUPLEN
+        mov     $AX, %ax                # service 2, nr of sectors
+        int     $0x13                   # read it
+        jnc     ok_load_hello           # ok - continue
+        mov     $0x0000, %dx
+        mov     $0x0000, %ax            # reset the diskette
+        int     $0x13
+        jmp     load_hello
+
+ok_load_hello:
+        mov     $0x00, %dl
+        mov     $0x0800, %ax            # AH=8 is get drive parameters
+        int     $0x13
+        mov     $0x00, %ch
+        #seg cs
+        mov     %cx, %cs:sectors+0      # %cs means sectors is in %cs
+        mov     $INITSEG, %ax
+        mov     %ax, %es
+	jmp	print_meg
+
+	#.equ sel_cs0, 0x0100		#select for code segment 0
+	#ljmp $sel_cs0, $0		#Jump to hello
+
 # load the setup-sectors directly after the bootblock.
 # Note that 'es' is already set up.
 
 load_setup:
 	mov	$0x0000, %dx		# drive 0, head 0
-	mov	$0x0002, %cx		# sector 2, track 0
+	mov	$0x0003, %cx		# sector 2, track 0
 	mov	$0x0200, %bx		# address = 512, in INITSEG
 	.equ    AX, 0x0200+SETUPLEN
 	mov     $AX, %ax		# service 2, nr of sectors
@@ -92,12 +138,12 @@ ok_load_setup:
 	mov	%ax, %es
 
 # Print some inane message
-
+print_meg:
 	mov	$0x03, %ah		# read cursor pos
 	xor	%bh, %bh
 	int	$0x10
 	
-	mov	$24, %cx
+	mov	$26, %cx
 	mov	$0x0007, %bx		# page 0, attribute 7 (normal)
 	#lea	msg1, %bp
 	mov     $msg1, %bp
@@ -147,7 +193,7 @@ root_defined:
 #
 # in:	es - starting address segment (normally 0x1000)
 #
-sread:	.word 1+ SETUPLEN	# sectors read of current track
+sread:	.word 2+ SETUPLEN	# sectors read of current track
 head:	.word 0			# current head
 track:	.word 0			# current track
 
@@ -245,9 +291,13 @@ sectors:
 	.word 0
 
 msg1:
-	.byte 13,10
+	.byte 13,10,13,10
 	.ascii "Loading system ..."
 	.byte 13,10,13,10
+
+msg_retype:
+        .byte 13,10
+        .ascii "Please enter either '1' for setup or '2' for hello:"
 
 	.org 508
 root_dev:
