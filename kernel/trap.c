@@ -16,6 +16,7 @@ static struct Trapframe *last_tf;
  *       function addresses can't be represented in relocation records.
  */
 struct Gatedesc idt[256] = {0};
+struct Pseudodesc pseudo_idt = {sizeof(idt) - 1, idt};
 
 /* For debugging */
 static const char *trapname(int trapno)
@@ -167,14 +168,12 @@ void trap_init()
    *       There is a data structure called Pseudodesc in mmu.h which might
    *       come in handy for you when filling up the argument of "lidt"
    */
-	struct Pseudodesc pseudo_idt = {sizeof(idt) - 1, idt};
 	/* Keyboard interrupt setup */
-	extern void isr_timer();
-	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, isr_timer,0);
-	/* Timer Trap setup */
 	extern void isr_kbd();
-	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, isr_kbd,0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, isr_kbd, 0);
+	/* Timer Trap setup */
+	extern void isr_timer();
+	SETGATE(idt[IRQ_OFFSET + IRQ_TIMER], 0, GD_KT, isr_timer, 0);
 	/* Load IDT */
 	lidt(&pseudo_idt);
-
 }

@@ -19,15 +19,18 @@ OBJDIR = .
 include boot/Makefile
 include kernel/Makefile
 
-all: boot/boot kernel/system
+all: clean boot/boot kernel/system
 	dd if=/dev/zero of=$(OBJDIR)/kernel.img count=10000 2>/dev/null
 	dd if=$(OBJDIR)/boot/boot of=$(OBJDIR)/kernel.img conv=notrunc 2>/dev/null
 	dd if=$(OBJDIR)/kernel/system of=$(OBJDIR)/kernel.img seek=1 conv=notrunc 2>/dev/null
 
 run:
-	qemu-system-i386 -hda kernel.img
+	qemu-system-i386 -hda kernel.img --curses
+
+debug:
+	qemu-system-i386 -hda kernel.img --curses -s -S
 
 clean:
-	rm $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
-	rm $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
-	rm $(OBJDIR)/lib/*.o
+	rm -f $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
+	rm -f $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
+	rm -f $(OBJDIR)/lib/*.o
