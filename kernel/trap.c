@@ -15,7 +15,7 @@ static struct Trapframe *last_tf;
  *       Interrupt descriptor table must be built at run time because shifted
  *       function addresses can't be represented in relocation records.
  */
-
+struct Gatedesc idt[256] = {0};
 
 /* For debugging */
 static const char *trapname(int trapno)
@@ -117,9 +117,17 @@ trap_dispatch(struct Trapframe *tf)
    *       We prepared the keyboard handler and timer handler for you
    *       already. Please reference in kernel/kbd.c and kernel/timer.c
    */
-
-	// Unexpected trap: The user process or the kernel has a bug.
-	print_trapframe(tf);
+	switch (tf->tf_trapno) {
+		case IRQ_OFFSET + IRQ_TIMER:
+			timer_handler();
+			break;
+		case IRQ_OFFSET + IRQ_KBD:
+			kbd_intr();
+			break;
+		default:
+			// Unexpected trap: The user process or the kernel has a bug.
+			print_trapframe(tf);
+	}
 }
 
 /* 
@@ -159,9 +167,14 @@ void trap_init()
    *       There is a data structure called Pseudodesc in mmu.h which might
    *       come in handy for you when filling up the argument of "lidt"
    */
-
+	struct Pseudodesc pseudo_idt = {sizeof(idt) - 1, idt};
 	/* Keyboard interrupt setup */
+	extern void isr_timer();
+	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, isr_timer,0);
 	/* Timer Trap setup */
-  /* Load IDT */
+	extern void isr_kbd();
+	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, isr_kbd,0);
+	/* Load IDT */
+	lidt(&pseudo_idt);
 
 }
