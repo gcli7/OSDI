@@ -22,6 +22,8 @@
  *       The Trap number are declared in inc/trap.h which might come in handy
  *       when declaring interface for ISRs.
  */
+	TRAPHANDLER_NOEC(isr_timer, IRQ_OFFSET + IRQ_TIMER)
+	TRAPHANDLER_NOEC(isr_kbd, IRQ_OFFSET + IRQ_KBD)
 
 .globl default_trap_handler;
 _alltraps:
@@ -37,9 +39,15 @@ _alltraps:
    *       pushing all the general purpose registers into the stack.
 	 */
 
+	pushl %ds
+	pushl %es
+	pushal
 	pushl %esp # Pass a pointer which points to the Trapframe as an argument to default_trap_handler()
 	call default_trap_handler
-
+	popl %esp
+	popal
+	popl %es
+	popl %ds
 	add $8, %esp # Cleans up the pushed error code and pushed ISR number
 	iret # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 
