@@ -15,8 +15,8 @@ static struct Trapframe *last_tf;
  *       Interrupt descriptor table must be built at run time because shifted
  *       function addresses can't be represented in relocation records.
  */
-struct Gatedesc idt[256] = {0};
-struct Pseudodesc pseudo_idt = {sizeof(idt) - 1, idt};
+struct Gatedesc idt[256] = { {0} };
+struct Pseudodesc pseudo_idt = { (uint16_t)(sizeof(idt) - 1), (uint32_t)idt };
 
 /* For debugging */
 static const char *trapname(int trapno)

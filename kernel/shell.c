@@ -13,6 +13,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "chgcolor", "Change command line color", mon_chgcolor },
 	{ "print_tick", "Display system tick", print_tick }
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
@@ -35,14 +36,42 @@ int mon_kerninfo(int argc, char **argv)
    *       Use PROVIDE inside linker script and calculate the
    *       offset.
    */
-	extern int kernel_load_addr, etext, data_start, end;
-	cprintf("Kernel code base start = 0x%08x size = %d\n", (int)&kernel_load_addr, (int)&etext - (int)&kernel_load_addr);
-	cprintf("Kernel data base start = 0x%08x size = %d\n", (int)&data_start, (int)&end - (int)&data_start);
-	//cprintf("Kernel executable memory footprint: %dKB\n", ((int)&end - (int)&kernel_load_addr) >> 10);
-	cprintf("Kernel executable memory footprint: %dKB\n", ((int)&end - (int)&kernel_load_addr) / 1024);
+	extern char kernel_load_addr, etext, data_start, end;
+	cprintf("Kernel code base start = 0x%08x size = %d\n", &kernel_load_addr, &etext - &kernel_load_addr);
+	cprintf("Kernel data base start = 0x%08x size = %d\n", &data_start, &end - &data_start);
+	cprintf("Kernel executable memory footprint: %dKB\n", (&end - &kernel_load_addr) >> 10);
+	//cprintf("Kernel executable memory footprint: %dKB\n", (&end - &kernel_load_addr) / 1024);
 
 	return 0;
 }
+
+int mon_chgcolor(int argc, char **argv) {
+	if (argc == 1) {
+		cprintf("No input text color!\n");
+		return 0;
+	}
+	else if (argc > 2) {
+		cprintf("Too many input text!\n");
+		return 0;
+	}
+
+	/*
+	int color = 0;
+	char *ptr = argv[1];
+	for ( ; *ptr; ptr++)
+		color = color * 10 + *ptr - '0';
+	settextcolor(color, 0);
+	cprintf("color = %d\n", color);
+	*/
+
+	int color = 0;
+	color = argv[1][0] - '0';
+	settextcolor(color, 0);
+	cprintf("Change color %d!\n", color);
+
+	return 0;
+}
+
 int print_tick(int argc, char **argv)
 {
 	cprintf("Now tick = %d\n", get_tick());
