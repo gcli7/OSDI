@@ -35,7 +35,7 @@ KERN_OBJS = kernel/entry.o \
 	lib/string.o
 
 kernel/%.o: kernel/%.c
-	$(CC) $(CFLAGS) -Os -c -o $@ $<
+	$(CC) $(CFLAGS)  -c -o $@ $<
 
 kernel/%.o: kernel/%.S
 	$(CC) $(CFLAGS) -c -o $@ $<
