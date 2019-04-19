@@ -31,6 +31,8 @@ debug:
 	qemu-system-i386 -hda kernel.img --curses -s -S
 
 clean:
-	rm -f $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
-	rm -f $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
-	rm -f $(OBJDIR)/lib/*.o
+	rm -rf $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
+	rm -rf $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
+	rm -rf $(OBJDIR)/lib/*.o
+	rm -rf $(OBJDIR)/user/*.o
+	rm -rf $(OBJDIR)/user/*.asm
