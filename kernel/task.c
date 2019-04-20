@@ -23,29 +23,29 @@
 //
 struct Segdesc gdt[6] =
 {
-	// 0x0 - unused (always faults -- for trapping NULL far pointers)
-	SEG_NULL,
+    // 0x0 - unused (always faults -- for trapping NULL far pointers)
+    SEG_NULL,
 
-	// 0x8 - kernel code segment
-	[GD_KT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 0),
+    // 0x8 - kernel code segment
+    [GD_KT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 0),
 
-	// 0x10 - kernel data segment
-	[GD_KD >> 3] = SEG(STA_W, 0x0, 0xffffffff, 0),
+    // 0x10 - kernel data segment
+    [GD_KD >> 3] = SEG(STA_W, 0x0, 0xffffffff, 0),
 
-	// 0x18 - user code segment
-	[GD_UT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 3),
+    // 0x18 - user code segment
+    [GD_UT >> 3] = SEG(STA_X | STA_R, 0x0, 0xffffffff, 3),
 
-	// 0x20 - user data segment
-	[GD_UD >> 3] = SEG(STA_W , 0x0, 0xffffffff, 3),
+    // 0x20 - user data segment
+    [GD_UD >> 3] = SEG(STA_W , 0x0, 0xffffffff, 3),
 
-	// First TSS descriptors (starting from GD_TSS0) are initialized
-	// in task_init()
-	[GD_TSS0 >> 3] = SEG_NULL
-	
+    // First TSS descriptors (starting from GD_TSS0) are initialized
+    // in task_init()
+    [GD_TSS0 >> 3] = SEG_NULL
+    
 };
 
 struct Pseudodesc gdt_pd = {
-	sizeof(gdt) - 1, (unsigned long) gdt
+    sizeof(gdt) - 1, (unsigned long) gdt
 };
 
 
@@ -97,9 +97,9 @@ extern void sched_yield(void);
  */
 int task_create()
 {
-	Task *ts = NULL;
+    Task *ts = NULL;
 
-	/* Find a free task structure */
+    /* Find a free task structure */
 
   /* Setup Page Directory and pages for kernel*/
   if (!(ts->pgdir = setupkvm()))
@@ -107,16 +107,16 @@ int task_create()
 
   /* Setup User Stack */
 
-	/* Setup Trapframe */
-	memset( &(ts->tf), 0, sizeof(ts->tf));
+    /* Setup Trapframe */
+    memset( &(ts->tf), 0, sizeof(ts->tf));
 
-	ts->tf.tf_cs = GD_UT | 0x03;
-	ts->tf.tf_ds = GD_UD | 0x03;
-	ts->tf.tf_es = GD_UD | 0x03;
-	ts->tf.tf_ss = GD_UD | 0x03;
-	ts->tf.tf_esp = USTACKTOP-PGSIZE;
+    ts->tf.tf_cs = GD_UT | 0x03;
+    ts->tf.tf_ds = GD_UD | 0x03;
+    ts->tf.tf_es = GD_UD | 0x03;
+    ts->tf.tf_ss = GD_UD | 0x03;
+    ts->tf.tf_esp = USTACKTOP-PGSIZE;
 
-	/* Setup task structure (task_id and parent_id) */
+    /* Setup task structure (task_id and parent_id) */
 }
 
 
@@ -143,14 +143,14 @@ static void task_free(int pid)
 
 void sys_kill(int pid)
 {
-	if (pid > 0 && pid < NR_TASKS)
-	{
-	/* TODO: Lab 5
+    if (pid > 0 && pid < NR_TASKS)
+    {
+    /* TODO: Lab 5
    * Remember to change the state of tasks
    * Free the memory
    * and invoke the scheduler for yield
    */
-	}
+    }
 }
 
 /* TODO: Lab 5
@@ -181,15 +181,15 @@ int sys_fork()
 {
   /* pid for newly created process */
   int pid;
-	if ((uint32_t)cur_task)
-	{
+    if ((uint32_t)cur_task)
+    {
     /* Step 4: All user program use the same code for now */
     setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
     setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
     setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
     setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
 
-	}
+    }
 }
 
 /* TODO: Lab5
@@ -198,56 +198,54 @@ int sys_fork()
  */
 void task_init()
 {
-  extern int user_entry();
-	int i;
-  UTEXT_SZ = (uint32_t)(UTEXT_end - UTEXT_start);
-  UDATA_SZ = (uint32_t)(UDATA_end - UDATA_start);
-  UBSS_SZ = (uint32_t)(UBSS_end - UBSS_start);
-  URODATA_SZ = (uint32_t)(URODATA_end - URODATA_start);
+    extern int user_entry();
+    int i;
+    UTEXT_SZ = (uint32_t)(UTEXT_end - UTEXT_start);
+    UDATA_SZ = (uint32_t)(UDATA_end - UDATA_start);
+    UBSS_SZ = (uint32_t)(UBSS_end - UBSS_start);
+    URODATA_SZ = (uint32_t)(URODATA_end - URODATA_start);
 
-	/* Initial task sturcture */
-	for (i = 0; i < NR_TASKS; i++)
-	{
-		memset(&(tasks[i]), 0, sizeof(Task));
-		tasks[i].state = TASK_FREE;
+    /* Initial task sturcture */
+    for (i = 0; i < NR_TASKS; i++)
+    {
+        memset(&(tasks[i]), 0, sizeof(Task));
+        tasks[i].state = TASK_FREE;
 
-	}
-	// Setup a TSS so that we get the right stack
-	// when we trap to the kernel.
-	memset(&(tss), 0, sizeof(tss));
-	tss.ts_esp0 = (uint32_t)bootstack + KSTKSIZE;
-	tss.ts_ss0 = GD_KD;
+    }
+    // Setup a TSS so that we get the right stack
+    // when we trap to the kernel.
+    memset(&(tss), 0, sizeof(tss));
+    tss.ts_esp0 = (uint32_t)bootstack + KSTKSIZE;
+    tss.ts_ss0 = GD_KD;
 
-	// fs and gs stay in user data segment
-	tss.ts_fs = GD_UD | 0x03;
-	tss.ts_gs = GD_UD | 0x03;
+    // fs and gs stay in user data segment
+    tss.ts_fs = GD_UD | 0x03;
+    tss.ts_gs = GD_UD | 0x03;
 
-	/* Setup TSS in GDT */
-	gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t)(&tss), sizeof(struct tss_struct), 0);
-	gdt[GD_TSS0 >> 3].sd_s = 0;
+    /* Setup TSS in GDT */
+    gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t)(&tss), sizeof(struct tss_struct), 0);
+    gdt[GD_TSS0 >> 3].sd_s = 0;
 
-	/* Setup first task */
-	i = task_create();
-	cur_task = &(tasks[i]);
+    /* Setup first task */
+    i = task_create();
+    cur_task = &(tasks[i]);
 
-  /* For user program */
-  setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-  setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-  setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-  setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-  cur_task->tf.tf_eip = (uint32_t)user_entry;
-	
-	/* Load GDT&LDT */
-	lgdt(&gdt_pd);
+    /* For user program */
+    setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+    setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+    setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+    setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+    cur_task->tf.tf_eip = (uint32_t)user_entry;
+    
+    /* Load GDT&LDT */
+    lgdt(&gdt_pd);
+    lldt(0);
 
+    // Load the TSS selector 
+    ltr(GD_TSS0);
 
-	lldt(0);
-
-	// Load the TSS selector 
-	ltr(GD_TSS0);
-
-	cur_task->state = TASK_RUNNING;
-	
+    cur_task->state = TASK_RUNNING;
+    
 }
 
 
