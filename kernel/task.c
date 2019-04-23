@@ -100,12 +100,27 @@ int task_create()
     Task *ts = NULL;
 
     /* Find a free task structure */
+    int index;
+    for (index = 0; index < NR_TASKS; index++)
+        if (tasks[index].state == TASK_FREE) {
+            ts = &tasks[index];
+            break;
+        }
+    if (!ts)
+        return -1;
 
-  /* Setup Page Directory and pages for kernel*/
-  if (!(ts->pgdir = setupkvm()))
-    panic("Not enough memory for per process page directory!\n");
+    /* Setup Page Directory and pages for kernel*/
+    if (!(ts->pgdir = setupkvm()))
+        panic("Not enough memory for per process page directory!\n");
 
-  /* Setup User Stack */
+    /* Setup User Stack */
+    for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
+        PageInfo *pi = page_alloc(1);
+        if (!pi)
+            return -1;
+        if (page_insert(ts->pgdir, pi, va, PTE_W | PTE_U) != 0)
+            return -1;
+    }
 
     /* Setup Trapframe */
     memset( &(ts->tf), 0, sizeof(ts->tf));
@@ -117,6 +132,15 @@ int task_create()
     ts->tf.tf_esp = USTACKTOP-PGSIZE;
 
     /* Setup task structure (task_id and parent_id) */
+    ts->task_id = index;
+    ts->state = TASK_RUNNABLE;
+    if (!cur_task)
+        ts->parent_id = 0;
+    else
+        ts->parent_id = cur_task->task_id;
+    ts->remind_ticks = TIME_QUANT;
+
+    return ts->task_id;
 }
 
 
@@ -139,6 +163,11 @@ int task_create()
  */
 static void task_free(int pid)
 {
+    lcr3(PADDR(kern_pgdir));
+    for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE)
+        page_remove(tasks[pid].pgdir, va);
+    ptable_remove(tasks[pid].pgdir);
+    pgdir_remove(tasks[pid].pgdir);
 }
 
 void sys_kill(int pid)
@@ -150,6 +179,9 @@ void sys_kill(int pid)
    * Free the memory
    * and invoke the scheduler for yield
    */
+        tasks[pid].state = TASK_FREE;
+        task_free(pid);
+        sched_yield();
     }
 }
 
@@ -179,17 +211,40 @@ void sys_kill(int pid)
  */
 int sys_fork()
 {
-  /* pid for newly created process */
-  int pid;
+    /* pid for newly created process */
+    /* Step 1: Create a new task.*/
+    int pid = task_create();
+    if (pid == -1)
+        return -1;
+
+    /* Step 2: Copy the trap frame from parent.
+     *         Structure can copy value by assign operator.
+     */
+    Task parent_task = tasks[tasks[pid].parent_id];
+    tasks[pid].tf = parent_task.tf;
+
+    /* Step 3: Copy the content. */
+    for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
+        pte_t *child_pte = pgdir_walk(tasks[pid].pgdir, va, 0);
+        pte_t *parent_pte = pgdir_walk(parent_task.pgdir, va, 0);
+        memcpy(KADDR(PTE_ADDR(*child_pte)), KADDR(PTE_ADDR(*parent_pte)), PGSIZE);
+    }
+
     if ((uint32_t)cur_task)
     {
-    /* Step 4: All user program use the same code for now */
-    setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-    setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+        /* Step 4: All user program use the same code for now */
+        setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+        setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+        setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+        setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
 
     }
+
+    /* Step 5: Return value store in the 'eax' register. */
+    tasks[pid].tf.tf_regs.reg_eax = 0;
+    parent_task.tf.tf_regs.reg_eax = pid;
+
+    return pid;
 }
 
 /* TODO: Lab5
@@ -247,6 +302,3 @@ void task_init()
     cur_task->state = TASK_RUNNING;
     
 }
-
-
-
