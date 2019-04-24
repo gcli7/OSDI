@@ -141,21 +141,21 @@ env_pop_tf(struct Trapframe *tf)
 static void
 trap_dispatch(struct Trapframe *tf)
 {
-  /* TODO: Handle specific interrupts.
-   *       You need to check the interrupt number in order to tell
-   *       which interrupt is currently happening since every interrupt
-   *       comes to this function called by default_trap_handler.
-   *
-   * NOTE: Checkout the Trapframe data structure for interrupt number,
-   *       which we had pushed into the stack when going through the
-   *       declared interface in trap_entry.S
-   *
-   *       The interrupt number is defined in inc/trap.h
-   *
-   *       We prepared the keyboard handler and timer handler for you
-   *       already. Please reference in kernel/kbd.c and kernel/timer.c
-   */
-   /*
+    /* TODO: Handle specific interrupts.
+     *       You need to check the interrupt number in order to tell
+     *       which interrupt is currently happening since every interrupt
+     *       comes to this function called by default_trap_handler.
+     *
+     * NOTE: Checkout the Trapframe data structure for interrupt number,
+     *       which we had pushed into the stack when going through the
+     *       declared interface in trap_entry.S
+     *
+     *       The interrupt number is defined in inc/trap.h
+     *
+     *       We prepared the keyboard handler and timer handler for you
+     *       already. Please reference in kernel/kbd.c and kernel/timer.c
+     */
+     /*
 	switch (tf->tf_trapno) {
 		case IRQ_OFFSET + IRQ_TIMER:
 			timer_handler();
@@ -227,27 +227,27 @@ void default_trap_handler(struct Trapframe *tf)
 
 void trap_init()
 {
-  /* TODO: You should initialize the interrupt descriptor table.
-   *       You should setup at least keyboard interrupt and timer interrupt as
-   *       the lab's requirement.
-   *
-   *       Noted that there is another file kernel/trap_entry.S, in which places
-   *       all the entry of interrupt handler.
-   *       Thus, you can declare an interface there by macro providing there and
-   *       use that function pointer when setting up the corresponding IDT entry.
-   *
-   *       By doing so, we can have more flexibility in adding new IDT entry and 
-   *       reuse the routine when interrupt occurs.
-   *
-   *       Remember to load you IDT with x86 assembly instruction lidt.
-   *
-   * Note:
-   *       You might be benefitted from the macro SETGATE inside mmu.h      
-   *       There are defined macros for Segment Selectors in mmu.h
-   *       Also, check out inc/x86.h for easy-to-use x86 assembly instruction
-   *       There is a data structure called Pseudodesc in mmu.h which might
-   *       come in handy for you when filling up the argument of "lidt"
-   */
+    /* TODO: You should initialize the interrupt descriptor table.
+     *       You should setup at least keyboard interrupt and timer interrupt as
+     *       the lab's requirement.
+     *
+     *       Noted that there is another file kernel/trap_entry.S, in which places
+     *       all the entry of interrupt handler.
+     *       Thus, you can declare an interface there by macro providing there and
+     *       use that function pointer when setting up the corresponding IDT entry.
+     *
+     *       By doing so, we can have more flexibility in adding new IDT entry and
+     *       reuse the routine when interrupt occurs.
+     *
+     *       Remember to load you IDT with x86 assembly instruction lidt.
+     *
+     * Note:
+     *       You might be benefitted from the macro SETGATE inside mmu.h
+     *       There are defined macros for Segment Selectors in mmu.h
+     *       Also, check out inc/x86.h for easy-to-use x86 assembly instruction
+     *       There is a data structure called Pseudodesc in mmu.h which might
+     *       come in handy for you when filling up the argument of "lidt"
+     */
 	/* Keyboard interrupt setup */
 	//extern void isr_kbd();
 	//SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, isr_kbd, 0);
@@ -269,15 +269,15 @@ void trap_init()
 	}
 
 
-  /* Using default_trap_handler */
+    /* Using default_trap_handler */
 	extern void GPFLT();
 	SETGATE(idt[T_GPFLT], 1, GD_KT, GPFLT, 0);
 	extern void STACK_ISR();
 	SETGATE(idt[T_STACK], 1, GD_KT, STACK_ISR, 0);
 
-  /* Using custom trap handler */
+    /* Using custom trap handler */
 	extern void PGFLT();
-  register_handler(T_PGFLT, page_fault_handler, PGFLT, 1, 0);
+    register_handler(T_PGFLT, page_fault_handler, PGFLT, 1, 0);
 
 	lidt(&idt_pd);
 }
