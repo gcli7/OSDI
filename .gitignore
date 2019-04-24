@@ -2,4 +2,5 @@ cscope.out
 tags
 *.o
 *.asm
+*.swp
 kernel/system

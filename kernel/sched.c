@@ -23,4 +23,19 @@ void sched_yield(void)
 {
 	extern Task tasks[];
 	extern Task *cur_task;
+
+    int index = cur_task->task_id;
+    while (1) {
+        if (++index >= NR_TASKS)
+            index = 0;
+
+        if (tasks[index].state == TASK_RUNNABLE)
+            break;
+    }
+
+    cur_task = &tasks[index];
+    cur_task->state = TASK_RUNNING;
+    cur_task->remind_ticks = TIME_QUANT;
+    lcr3(PADDR(cur_task->pgdir));
+    ctx_switch(cur_task);
 }
