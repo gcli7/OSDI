@@ -115,7 +115,7 @@ int task_create()
 
     /* Setup User Stack */
     for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
-        PageInfo *pi = page_alloc(1);
+        struct PageInfo *pi = page_alloc(1);
         if (!pi)
             return -1;
         if (page_insert(ts->pgdir, pi, va, PTE_W | PTE_U) != 0)
