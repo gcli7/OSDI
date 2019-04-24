@@ -41,6 +41,18 @@ void timer_handler(struct Trapframe *tf)
          * 4. sched_yield() if the time is up for current task
          *
          */
+        int index;
+        for (index = 0; index < NR_TASKS; index++)
+            if (tasks[index].state == TASK_SLEEP) {
+                tasks[index].remind_ticks--;
+                if (tasks[index].remind_ticks <= 0)
+                    tasks[index].state = TASK_RUNNABLE;
+            }
+
+        if (--(cur_task->remind_ticks) <= 0) {
+            cur_task->state = TASK_RUNNABLE;
+            sched_yield();
+        }
     }
 }
 
@@ -48,6 +60,7 @@ unsigned long sys_get_ticks()
 {
     return jiffies;
 }
+
 void timer_init()
 {
     set_timer(TIME_HZ);
@@ -59,4 +72,3 @@ void timer_init()
     extern void TIM_ISR();
     register_handler(IRQ_OFFSET + IRQ_TIMER, &timer_handler, &TIM_ISR, 0, 0);
 }
-
