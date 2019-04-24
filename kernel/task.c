@@ -134,14 +134,14 @@ int task_create()
 
     /* Setup task structure (task_id and parent_id) */
     ts->task_id = index;
-    ts->state = TASK_RUNNABLE;
-    if (!cur_task)
-        ts->parent_id = 0;
-    else
+    if (cur_task)
         ts->parent_id = cur_task->task_id;
+    else
+        ts->parent_id = 0;
     ts->remind_ticks = TIME_QUANT;
+    ts->state = TASK_RUNNABLE;
 
-    return ts->task_id;
+    return index;
 }
 
 
@@ -303,5 +303,4 @@ void task_init()
     ltr(GD_TSS0);
 
     cur_task->state = TASK_RUNNING;
-    
 }

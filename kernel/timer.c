@@ -49,7 +49,8 @@ void timer_handler(struct Trapframe *tf)
                     tasks[index].state = TASK_RUNNABLE;
             }
 
-        if (--(cur_task->remind_ticks) <= 0) {
+        cur_task->remind_ticks--;
+        if (cur_task->remind_ticks <= 0) {
             cur_task->state = TASK_RUNNABLE;
             sched_yield();
         }

@@ -547,20 +547,20 @@ page_remove(pde_t *pgdir, void *va)
 void
 ptable_remove(pde_t *pgdir)
 {
-  int i;
-  /* Free Page Tables */
-  for (i = 0; i < 1024; i++)
-  {
-    if (pgdir[i] & PTE_P)
-      page_decref(pa2page(PTE_ADDR(pgdir[i])));
-  }
+    int i;
+    /* Free Page Tables */
+    for (i = 0; i < 1024; i++)
+    {
+        if (pgdir[i] & PTE_P)
+            page_decref(pa2page(PTE_ADDR(pgdir[i])));
+    }
 }
 
 
 void
 pgdir_remove(pde_t *pgdir)
 {
-  page_free(pa2page(PADDR(pgdir)));
+    page_free(pa2page(PADDR(pgdir)));
 }
 
 //
@@ -580,8 +580,8 @@ tlb_invalidate(pde_t *pgdir, void *va)
 void
 setupvm(pde_t *pgdir, uint32_t start, uint32_t size)
 {
-  boot_map_region(pgdir, start, ROUNDUP(size, PGSIZE), PADDR((void*)start), PTE_W | PTE_U);
-  assert(check_va2pa(pgdir, start) == PADDR((void*)start));
+    boot_map_region(pgdir, start, ROUNDUP(size, PGSIZE), PADDR((void*)start), PTE_W | PTE_U);
+    assert(check_va2pa(pgdir, start) == PADDR((void*)start));
 }
 
 

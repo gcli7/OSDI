@@ -26,8 +26,13 @@ void sched_yield(void)
 
     int index = cur_task->task_id;
     while (1) {
-        if (++index >= NR_TASKS)
+        idnex++;
+        if (index >= NR_TASKS)
             index = 0;
+        //printk("index = %d, cur_task->task_id = %d\n", index, cur_task->task_id);
+
+        if (index == cur_task->task_id)
+            break;
 
         if (tasks[index].state == TASK_RUNNABLE)
             break;

@@ -113,11 +113,11 @@ static void syscall_handler(struct Trapframe *tf)
      * HINT: You have to know where to put the return value
      */
     tf->tf_regs.reg_eax = do_syscall(tf->tf_regs.reg_eax,
-                                      tf->tf_regs.reg_edx,
-                                      tf->tf_regs.reg_ecx,
-                                      tf->tf_regs.reg_ebx,
-                                      tf->tf_regs.reg_edi,
-                                      tf->tf_regs.reg_esi);
+                                     tf->tf_regs.reg_edx,
+                                     tf->tf_regs.reg_ecx,
+                                     tf->tf_regs.reg_ebx,
+                                     tf->tf_regs.reg_edi,
+                                     tf->tf_regs.reg_esi);
 }
 
 void syscall_init()
