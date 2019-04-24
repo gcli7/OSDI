@@ -63,7 +63,10 @@ void settextcolor(unsigned char forecolor, unsigned char backcolor) {
     syscall(SYS_settextcolor, (uint32_t)forecolor, (uint32_t)backcolor, 0,0,0);
 }
 
-SYSCALL_NOARG(kill_self, void);
+void kill_self() {
+    syscall(SYS_kill, 0, 0, 0, 0, 0);
+}
+
 SYSCALL_NOARG(fork, int32_t);
 SYSCALL_NOARG(getpid, int32_t);
 SYSCALL_NOARG(cls, int32_t);

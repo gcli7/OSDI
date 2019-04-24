@@ -53,7 +53,7 @@ int32_t do_syscall(uint32_t syscallno, uint32_t a1, uint32_t a2, uint32_t a3, ui
              * Yield this task
              * You can reference kernel/sched.c for yielding the task
              */
-            cur_task->TASK_SLEEP;
+            cur_task->state = TASK_SLEEP;
             cur_task->remind_ticks = a1;
             sched_yield();
             break;

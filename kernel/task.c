@@ -114,7 +114,8 @@ int task_create()
         panic("Not enough memory for per process page directory!\n");
 
     /* Setup User Stack */
-    for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
+    int va;
+    for (va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
         struct PageInfo *pi = page_alloc(1);
         if (!pi)
             return -1;
@@ -164,7 +165,8 @@ int task_create()
 static void task_free(int pid)
 {
     lcr3(PADDR(kern_pgdir));
-    for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE)
+    int va;
+    for (va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE)
         page_remove(tasks[pid].pgdir, va);
     ptable_remove(tasks[pid].pgdir);
     pgdir_remove(tasks[pid].pgdir);
@@ -224,7 +226,8 @@ int sys_fork()
     tasks[pid].tf = parent_task.tf;
 
     /* Step 3: Copy the content. */
-    for (int va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
+    int va;
+    for (va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
         pte_t *child_pte = pgdir_walk(tasks[pid].pgdir, va, 0);
         pte_t *parent_pte = pgdir_walk(parent_task.pgdir, va, 0);
         memcpy(KADDR(PTE_ADDR(*child_pte)), KADDR(PTE_ADDR(*parent_pte)), PGSIZE);
