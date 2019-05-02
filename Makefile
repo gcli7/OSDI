@@ -6,7 +6,7 @@ OBJCOPY = objcopy
 OBJDUMP = objdump
 NM = nm
 
-CFLAGS = -m32 -Wall -O0 -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin 
+CFLAGS = -m32 -Wall -O0 -fstrength-reduce -finline-functions -nostdinc -fno-builtin 
 
 # Add debug symbol
 CFLAGS += -g
@@ -15,6 +15,7 @@ CFLAGS += -I.
 
 OBJDIR = .
 
+CPUS ?= 1
 
 include boot/Makefile
 include kernel/Makefile
@@ -24,15 +25,15 @@ all: clean boot/boot kernel/system
 	dd if=$(OBJDIR)/boot/boot of=$(OBJDIR)/kernel.img conv=notrunc 2>/dev/null
 	dd if=$(OBJDIR)/kernel/system of=$(OBJDIR)/kernel.img seek=1 conv=notrunc 2>/dev/null
 
-run:
-	qemu-system-i386 -hda kernel.img --curses
-
-debug:
-	qemu-system-i386 -hda kernel.img --curses -s -S
-
 clean:
 	rm -rf $(OBJDIR)/boot/*.o $(OBJDIR)/boot/boot.out $(OBJDIR)/boot/boot $(OBJDIR)/boot/boot.asm
 	rm -rf $(OBJDIR)/kernel/*.o $(OBJDIR)/kernel/system* kernel.*
 	rm -rf $(OBJDIR)/lib/*.o
 	rm -rf $(OBJDIR)/user/*.o
 	rm -rf $(OBJDIR)/user/*.asm
+
+qemu:
+	qemu-system-i386 -hda kernel.img --curses -monitor stdio -smp $(CPUS)
+
+debug:
+	qemu-system-i386 -hda kernel.img --curses -monitor stdio -s -S -smp $(CPUS)

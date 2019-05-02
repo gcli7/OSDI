@@ -5,6 +5,7 @@
 #include <inc/memlayout.h>
 #include <kernel/task.h>
 #include <kernel/mem.h>
+#include <kernel/cpu.h>
 
 // Global descriptor table.
 //
@@ -21,7 +22,7 @@
 // definition of gdt specifies the Descriptor Privilege Level (DPL)
 // of that descriptor: 0 for kernel and 3 for user.
 //
-struct Segdesc gdt[6] =
+struct Segdesc gdt[NCPU + 5] =
 {
     // 0x0 - unused (always faults -- for trapping NULL far pointers)
     SEG_NULL,
@@ -70,7 +71,7 @@ Task *cur_task = NULL; //Current running task
 extern void sched_yield(void);
 
 
-/* TODO: Lab5
+/* Lab5
  * 1. Find a free task structure for the new task,
  *    the global task list is in the array "tasks".
  *    You should find task that is in the state "TASK_FREE"
@@ -93,7 +94,7 @@ extern void sched_yield(void);
  *    and its schedule time quantum (remind_ticks).
  *
  * 6. Return the pid of the newly created task.
- *
+ 
  */
 int task_create()
 {
@@ -145,7 +146,7 @@ int task_create()
 }
 
 
-/* TODO: Lab5
+/* Lab5
  * This function free the memory allocated by kernel.
  *
  * 1. Be sure to change the page directory to kernel's page
@@ -162,6 +163,8 @@ int task_create()
  *
  * HINT: You can refer to page_remove, ptable_remove, and pgdir_remove
  */
+
+
 static void task_free(int pid)
 {
     lcr3(PADDR(kern_pgdir));
@@ -172,11 +175,17 @@ static void task_free(int pid)
     pgdir_remove(tasks[pid].pgdir);
 }
 
+// Lab6 TODO
+//
+// Modify it so that the task will be removed form cpu runqueue
+// ( we not implement signal yet so do not try to kill process
+// running on other cpu )
+//
 void sys_kill(int pid)
 {
     if (pid > 0 && pid < NR_TASKS)
     {
-    /* TODO: Lab 5
+    /* Lab 5
    * Remember to change the state of tasks
    * Free the memory
    * and invoke the scheduler for yield
@@ -187,7 +196,7 @@ void sys_kill(int pid)
     }
 }
 
-/* TODO: Lab 5
+/* Lab 5
  * In this function, you have several things todo
  *
  * 1. Use task_create() to create an empty task, return -1
@@ -211,6 +220,13 @@ void sys_kill(int pid)
  * HINT: You should understand how system call return
  * it's return value.
  */
+
+//
+// Lab6 TODO:
+//
+// Modify it so that the task will disptach to different cpu runqueue
+// (please try to load balance, don't put all task into one cpu)
+//
 int sys_fork()
 {
     /* pid for newly created process */
@@ -250,57 +266,79 @@ int sys_fork()
     return pid;
 }
 
-/* TODO: Lab5
+/* Lab5
  * We've done the initialization for you,
  * please make sure you understand the code.
  */
 void task_init()
 {
     extern int user_entry();
-    int i;
+	int i;
     UTEXT_SZ = (uint32_t)(UTEXT_end - UTEXT_start);
     UDATA_SZ = (uint32_t)(UDATA_end - UDATA_start);
     UBSS_SZ = (uint32_t)(UBSS_end - UBSS_start);
     URODATA_SZ = (uint32_t)(URODATA_end - URODATA_start);
 
-    /* Initial task sturcture */
-    for (i = 0; i < NR_TASKS; i++)
-    {
-        memset(&(tasks[i]), 0, sizeof(Task));
-        tasks[i].state = TASK_FREE;
+	/* Initial task sturcture */
+	for (i = 0; i < NR_TASKS; i++)
+	{
+		memset(&(tasks[i]), 0, sizeof(Task));
+		tasks[i].state = TASK_FREE;
 
-    }
-    // Setup a TSS so that we get the right stack
-    // when we trap to the kernel.
-    memset(&(tss), 0, sizeof(tss));
-    tss.ts_esp0 = (uint32_t)bootstack + KSTKSIZE;
-    tss.ts_ss0 = GD_KD;
+	}
+	task_init_percpu();
+}
 
-    // fs and gs stay in user data segment
-    tss.ts_fs = GD_UD | 0x03;
-    tss.ts_gs = GD_UD | 0x03;
+// Lab6 TODO
+//
+// Please modify this function to:
+//
+// 1. init idle task for non-booting AP 
+//    (remember to put the task in cpu runqueue) 
+//
+// 2. init per-CPU Runqueue
+//
+// 3. init per-CPU system registers
+//
+// 4. init per-CPU TSS
+//
+void task_init_percpu()
+{
+	int i;
+	extern int user_entry();
+	extern int idle_entry();
+	
+	// Setup a TSS so that we get the right stack
+	// when we trap to the kernel.
+	memset(&(tss), 0, sizeof(tss));
+	tss.ts_esp0 = (uint32_t)bootstack + KSTKSIZE;
+	tss.ts_ss0 = GD_KD;
 
-    /* Setup TSS in GDT */
-    gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t)(&tss), sizeof(struct tss_struct), 0);
-    gdt[GD_TSS0 >> 3].sd_s = 0;
+	// fs and gs stay in user data segment
+	tss.ts_fs = GD_UD | 0x03;
+	tss.ts_gs = GD_UD | 0x03;
 
-    /* Setup first task */
-    i = task_create();
-    cur_task = &(tasks[i]);
+	/* Setup TSS in GDT */
+	gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t)(&tss), sizeof(struct tss_struct), 0);
+	gdt[GD_TSS0 >> 3].sd_s = 0;
 
-    /* For user program */
-    setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-    setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-    setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-    setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-    cur_task->tf.tf_eip = (uint32_t)user_entry;
-    
-    /* Load GDT&LDT */
-    lgdt(&gdt_pd);
-    lldt(0);
+	/* Setup first task */
+	i = task_create();
+	cur_task = &(tasks[i]);
 
-    // Load the TSS selector 
-    ltr(GD_TSS0);
+	/* For user program */
+	setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+	setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+	setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+	setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+	cur_task->tf.tf_eip = (uint32_t)user_entry;
 
-    cur_task->state = TASK_RUNNING;
+	/* Load GDT&LDT */
+	lgdt(&gdt_pd);
+	lldt(0);
+
+	// Load the TSS selector 
+	ltr(GD_TSS0);
+
+	cur_task->state = TASK_RUNNING;
 }
