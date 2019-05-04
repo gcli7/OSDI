@@ -312,7 +312,11 @@ page_init(void)
     pages[0].pp_ref = 1;
     pages[0].pp_link = NULL;
     for (i = 1; i < npages; i++) {
-        if (i < npages_basemem) {
+        if (i == MPENTRY_PADDR / PGSIZE) {
+            pages[i].pp_ref = 1;
+            pages[i].pp_link = NULL;
+        }
+        else if (i < npages_basemem) {
             pages[i].pp_ref = 0;
             pages[i].pp_link = page_free_list;
             page_free_list = &pages[i];
