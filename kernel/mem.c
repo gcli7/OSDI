@@ -637,9 +637,13 @@ mmio_map_region(physaddr_t pa, size_t size)
     //
     // Lab6 TODO
     // Your code here:
-    
+    if (base + size > MMIOLIM)
+        panic("mmio_map_region overflow!");
+    boot_map_region(kern_pgdir, base, ROUNDUP(size, PGSIZE), pa, PTE_W | PTE_PCD | PTE_PWT);
 
-    panic("mmio_map_region not implemented");
+    void *ret = (void *)base;
+    base += ROUNDUP(size, PGSIZE);
+    return ret;
 }
 
 /* This is a simple wrapper function for mapping user program */
