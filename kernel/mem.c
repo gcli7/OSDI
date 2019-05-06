@@ -671,15 +671,20 @@ setupvm(pde_t *pgdir, uint32_t start, uint32_t size)
 pde_t *
 setupkvm()
 {
+    extern uint32_t *lapic;
+    extern physaddr_t lapicaddr;
     pde_t *pgdir = NULL;
     struct PageInfo *pi = page_alloc(1);
 
     if (pi) {
         pgdir = page2kva(pi);
         boot_map_region(pgdir, UPAGES, ROUNDUP((sizeof(struct PageInfo) * npages), PGSIZE), PADDR(pages), (PTE_U | PTE_P));
-        boot_map_region(pgdir, KSTACKTOP - KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_P | PTE_W);
         boot_map_region(pgdir, KERNBASE, ROUNDUP(0xFFFFFFFF - KERNBASE + 1, PGSIZE), 0, PTE_P | PTE_W);
         boot_map_region(pgdir, IOPHYSMEM, ROUNDUP((EXTPHYSMEM - IOPHYSMEM), PGSIZE), IOPHYSMEM, (PTE_W) | (PTE_P));
+        boot_map_region(pgdir, lapic, PGSIZE, lapicaddr, PTE_W | PTE_PWT | PTE_PCD);
+        int i;
+        for (i = 0; i < NCPU; i++)
+            boot_map_region(pgdir, KSTACKTOP - (i + 1) * KSTKSIZE - i * KSTKGAP, KSTKSIZE, PADDR(percpu_kstacks[i]), PTE_P | PTE_W);
     }
 
     return pgdir;
