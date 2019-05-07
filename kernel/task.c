@@ -66,8 +66,6 @@ uint32_t UDATA_SZ;
 uint32_t UBSS_SZ;
 uint32_t URODATA_SZ;
 
-Task *cur_task = NULL; //Current running task
-
 extern void sched_yield(void);
 
 
@@ -249,7 +247,7 @@ int sys_fork()
         memcpy(KADDR(PTE_ADDR(*child_pte)), KADDR(PTE_ADDR(*parent_pte)), PGSIZE);
     }
 
-    if ((uint32_t)cur_task)
+    if ((uint32_t)thiscpu->cpu_task)
     {
         /* Step 4: All user program use the same code for now */
         setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);

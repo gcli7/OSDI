@@ -13,7 +13,7 @@
 * 2. If the next task is in TASK_RUNNABLE state, choose
 *    it.
 *
-* 3. After your choice set cur_task to the picked task
+* 3. After your choice set thiscpu->cpu_task to the picked task
 *    and set its state, remind_ticks, and change page
 *    directory to its pgdir.
 *
@@ -43,9 +43,8 @@
 void sched_yield(void)
 {
 	extern Task tasks[];
-	extern Task *cur_task;
 
-    int index = cur_task->task_id;
+    int index = thiscpu->cpu_task->task_id;
     while (1) {
         index++;
         if (index >= NR_TASKS)
@@ -55,9 +54,9 @@ void sched_yield(void)
             break;
     }
 
-    cur_task = &tasks[index];
-    cur_task->state = TASK_RUNNING;
-    cur_task->remind_ticks = TIME_QUANT;
-    lcr3(PADDR(cur_task->pgdir));
-    ctx_switch(cur_task);
+    thiscpu->cpu_task = &tasks[index];
+    thiscpu->cpu_task->state = TASK_RUNNING;
+    thiscpu->cpu_task->remind_ticks = TIME_QUANT;
+    lcr3(PADDR(thiscpu->cpu_task->pgdir));
+    ctx_switch(thiscpu->cpu_task);
 }
