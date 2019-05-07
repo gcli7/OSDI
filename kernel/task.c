@@ -135,8 +135,8 @@ int task_create()
 
     /* Setup task structure (task_id and parent_id) */
     ts->task_id = index;
-    if (cur_task)
-        ts->parent_id = cur_task->task_id;
+    if (thiscpu->cpu_task)
+        ts->parent_id = thiscpu->cpu_task->task_id;
     else
         ts->parent_id = 0;
     ts->remind_ticks = TIME_QUANT;
