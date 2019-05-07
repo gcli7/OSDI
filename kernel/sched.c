@@ -42,21 +42,27 @@
 //
 void sched_yield(void)
 {
+    int queue_id;
 	extern Task tasks[];
 
-    int index = thiscpu->cpu_task->task_id;
-    while (1) {
-        index++;
-        if (index >= NR_TASKS)
-            index = 0;
+    if (thiscpu->cpu_task)
+        queue_id = thiscpu->cpu_rq.index;
+    else
+        queue_id = 0;
 
-        if (tasks[index].state == TASK_RUNNABLE)
+    while (1) {
+        queue_id = (queue_id + 1) % thiscpu->cpu_rq.task_counter;
+        if (queue_id == thiscpu->cpu_rq.index)
+            return;
+
+        if (tasks[thiscpu->cpu_rq.task_list[queue_id]].state == TASK_RUNNABLE)
             break;
     }
 
-    thiscpu->cpu_task = &tasks[index];
+    thiscpu->cpu_task = &tasks[thiscpu->cpu_rq.task_list[queue_id]];
     thiscpu->cpu_task->state = TASK_RUNNING;
     thiscpu->cpu_task->remind_ticks = TIME_QUANT;
+    thiscpu->cpu_rq.index = queue_id;
     lcr3(PADDR(thiscpu->cpu_task->pgdir));
     ctx_switch(thiscpu->cpu_task);
 }
