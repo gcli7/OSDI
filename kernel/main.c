@@ -161,14 +161,15 @@ mp_main(void)
     printk("SMP: CPU %d starting\n", cpunum());
     
     // Your code here:
-    
+    lapic_init();
+    task_init_percpu();
+    lidt(&idt_pd);
 
     // TODO: Lab6
     // Now that we have finished some basic setup, it's time to tell
     // boot_aps() we're up ( using xchg )
     // Your code here:
-
-
+    xchg(&(cpus[cpunum()].cpu_status), CPU_STARTED);
 
     /* Enable interrupt */
     __asm __volatile("sti");
@@ -185,5 +186,4 @@ mp_main(void)
             "iret\n" \
             :: "m" (thiscpu->cpu_task->tf.tf_esp), "i" (GD_UD | 0x03), "i" (GD_UT | 0x03), "m" (thiscpu->cpu_task->tf.tf_eip)
             :"ax");
-
 }
