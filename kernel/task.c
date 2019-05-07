@@ -183,6 +183,15 @@ void sys_kill(int pid)
 {
     if (pid > 0 && pid < NR_TASKS)
     {
+        int i;
+        for (i = 0; i < thiscpu->cpu_rq.task_counter; i++)
+            if (thiscpu->cpu_rq.task_list[i] == pid) {
+                thiscpu->cpu_rq.task_list[i] = thiscpu->cpu_rq.task_list[thiscpu->cpu_rq.task_counter-1];
+                thiscpu->cpu_rq.task_counter--;
+                break;
+            }
+        if (i >= thiscpu->cpu_rq.task_counter)
+            panic("Kill a non-exist process.");
     /* Lab 5
    * Remember to change the state of tasks
    * Free the memory
@@ -190,7 +199,10 @@ void sys_kill(int pid)
    */
         tasks[pid].state = TASK_FREE;
         task_free(pid);
-        sched_yield();
+        if (thiscpu->cpu_task->task_id == pid) {
+            thiscpu->cpu_task = NULL;
+            sched_yield();
+        }
     }
 }
 
