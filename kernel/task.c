@@ -305,49 +305,49 @@ void task_init()
 void task_init_percpu()
 {
 	int i;
-    int cpuN = cpunum();
 	extern int user_entry();
 	extern int idle_entry();
 	
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
-	memset(&(cpus[cpuN].cpu_tss), 0, sizeof(cpus[cpuN].cpu_tss));
-	cpus[cpuN].cpu_tss.ts_esp0 = (uint32_t)percpu_kstacks[cpus[cpuN].cpu_id] + KSTKSIZE;
-	cpus[cpuN].cpu_tss.ts_ss0 = GD_KD;
+	memset(&(thiscpu->cpu_tss), 0, sizeof(thiscpu->cpu_tss));
+	thiscpu->cpu_tss.ts_esp0 = (uint32_t)percpu_kstacks[thiscpu->cpu_id] + KSTKSIZE;
+	thiscpu->cpu_tss.ts_ss0 = GD_KD;
 
 	// fs and gs stay in user data segment
-	cpus[cpuN].cpu_tss.ts_fs = GD_UD | 0x03;
-	cpus[cpuN].cpu_tss.ts_gs = GD_UD | 0x03;
+	thiscpu->cpu_tss.ts_fs = GD_UD | 0x03;
+	thiscpu->cpu_tss.ts_gs = GD_UD | 0x03;
 
 	/* Setup TSS in GDT */
-	gdt[GD_TSS0 >> 3 + cpus[cpuN].cpu_id] = SEG16(STS_T32A, (uint32_t)(&(cpus[cpuN].cpu_tss)), sizeof(struct tss_struct), 0);
-	gdt[GD_TSS0 >> 3 + cpus[cpuN].cpu_id].sd_s = 0;
+	gdt[(GD_TSS0 >> 3) + thiscpu->cpu_id] = SEG16(STS_T32A, (uint32_t)(&(thiscpu->cpu_tss)), sizeof(struct tss_struct), 0);
+	gdt[(GD_TSS0 >> 3) + thiscpu->cpu_id].sd_s = 0;
 
 	/* Setup first task */
 	i = task_create();
-	cpus[cpuN].cpu_task = &(tasks[i]);
+	thiscpu->cpu_task = &(tasks[i]);
 
 	/* For user program */
-	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-    if (cpus[cpuN].cpu_id == bootcpu->cpu_id)
-    	cpus[cpuN].cpu_task->tf.tf_eip = (uint32_t)user_entry;
+	setupvm(thiscpu->cpu_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+	setupvm(thiscpu->cpu_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+	setupvm(thiscpu->cpu_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+	setupvm(thiscpu->cpu_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+    if (thiscpu->cpu_id == bootcpu->cpu_id)
+    	thiscpu->cpu_task->tf.tf_eip = (uint32_t)user_entry;
     else
-    	cpus[cpuN].cpu_task->tf.tf_eip = (uint32_t)idle_entry;
+    	thiscpu->cpu_task->tf.tf_eip = (uint32_t)idle_entry;
 
     /* Init per-CPU Runqueue */
-    cpus[cpuN].cpu_rq.task_list[0] = i;
-    cpus[cpuN].cpu_rq.task_counter = 1;
-    cpus[cpuN].cpu_rq.index = 0;
+    memset(&(thiscpu->cpu_rq), 0, sizeof(thiscpu->cpu_rq));
+    thiscpu->cpu_rq.task_list[0] = i;
+    thiscpu->cpu_rq.index = 0;
+    thiscpu->cpu_rq.task_counter = 1;
 
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
 	lldt(0);
 
-	// Load the TSS selector 
-	ltr(GD_TSS0);
+	// Load the TSS selector
+    ltr(GD_TSS0 + (thiscpu->cpu_id << 3));
 
-	cpus[cpuN].cpu_task->state = TASK_RUNNING;
+	thiscpu->cpu_task->state = TASK_RUNNING;
 }

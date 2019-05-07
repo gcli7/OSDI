@@ -169,7 +169,7 @@ mp_main(void)
     // Now that we have finished some basic setup, it's time to tell
     // boot_aps() we're up ( using xchg )
     // Your code here:
-    xchg(&(cpus[cpunum()].cpu_status), CPU_STARTED);
+    xchg(&thiscpu->cpu_status, CPU_STARTED);
 
     /* Enable interrupt */
     __asm __volatile("sti");
