@@ -27,13 +27,14 @@ void set_timer(int hz)
 void timer_handler(struct Trapframe *tf)
 {
     extern void sched_yield();
-    int i;
+    int id;
 
     jiffies++;
 
     extern Task tasks[];
 
-    if (thiscpu->cpu_task != NULL)
+    lapic_eoi();
+    if (thiscpu->cpu_task)
     {
         /* Lab 5
          * 1. Maintain the status of slept tasks
@@ -46,12 +47,14 @@ void timer_handler(struct Trapframe *tf)
          *
          */
         int index;
-        for (index = 0; index < NR_TASKS; index++)
-            if (tasks[index].state == TASK_SLEEP) {
-                tasks[index].remind_ticks--;
-                if (tasks[index].remind_ticks <= 0)
-                    tasks[index].state = TASK_RUNNABLE;
+        for (index = 0; index < thiscpu->cpu_rq.task_counter; index++) {
+            id = thiscpu->cpu_rq.task_list[index];
+            if (tasks[id].state == TASK_SLEEP) {
+                tasks[id].remind_ticks--;
+                if (tasks[id].remind_ticks <= 0)
+                    tasks[id].state = TASK_RUNNABLE;
             }
+        }
 
         thiscpu->cpu_task->remind_ticks--;
         if (thiscpu->cpu_task->remind_ticks <= 0) {
