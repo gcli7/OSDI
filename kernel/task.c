@@ -233,33 +233,44 @@ int sys_fork()
     if (pid == -1)
         return -1;
 
-    /* Step 2: Copy the trap frame from parent.
-     *         Structure can copy value by assign operator.
-     */
-    Task parent_task = tasks[tasks[pid].parent_id];
-    tasks[pid].tf = parent_task.tf;
+    if ((uint32_t)thiscpu->cpu_task) {
+        /* Step 2: Copy the trap frame from parent.
+         *         Structure can copy value by assign operator.
+         */
+        Task parent_task = tasks[tasks[pid].parent_id];
+        tasks[pid].tf = parent_task.tf;
 
-    /* Step 3: Copy the content. */
-    int va;
-    for (va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
-        pte_t *child_pte = pgdir_walk(tasks[pid].pgdir, va, 0);
-        pte_t *parent_pte = pgdir_walk(parent_task.pgdir, va, 0);
-        memcpy(KADDR(PTE_ADDR(*child_pte)), KADDR(PTE_ADDR(*parent_pte)), PGSIZE);
-    }
+        /* Step 3: Copy the content. */
+        int va;
+        for (va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
+            pte_t *child_pte = pgdir_walk(tasks[pid].pgdir, va, 0);
+            pte_t *parent_pte = pgdir_walk(parent_task.pgdir, va, 0);
+            memcpy(KADDR(PTE_ADDR(*child_pte)), KADDR(PTE_ADDR(*parent_pte)), PGSIZE);
+        }
 
-    if ((uint32_t)thiscpu->cpu_task)
-    {
         /* Step 4: All user program use the same code for now */
         setupvm(tasks[pid].pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
         setupvm(tasks[pid].pgdir, (uint32_t)UDATA_start, UDATA_SZ);
         setupvm(tasks[pid].pgdir, (uint32_t)UBSS_start, UBSS_SZ);
         setupvm(tasks[pid].pgdir, (uint32_t)URODATA_start, URODATA_SZ);
 
+        /* Step 5: Return value store in the 'eax' register. */
+        tasks[pid].tf.tf_regs.reg_eax = 0;
+        parent_task.tf.tf_regs.reg_eax = pid;
     }
 
-    /* Step 5: Return value store in the 'eax' register. */
-    tasks[pid].tf.tf_regs.reg_eax = 0;
-    parent_task.tf.tf_regs.reg_eax = pid;
+    int i;
+    int pick_cpu_id = 0;
+    int min_task_counter = cpus[0].cpu_rq.task_counter;
+
+    for (i = 1; i < ncpu; i++)
+        if (cpus[i].cpu_rq.task_counter < min_task_counter) {
+            min_task_counter = cpus[i].cpu_rq.task_counter;
+            pick_cpu_id = i;
+        }
+
+    cpus[pick_cpu_id].cpu_rq.task_list[cpus[pick_cpu_id].cpu_rq.task_counter] = pid;
+    cpus[pick_cpu_id].cpu_rq.task_counter++;
 
     return pid;
 }

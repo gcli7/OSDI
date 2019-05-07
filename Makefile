@@ -33,7 +33,7 @@ clean:
 	rm -rf $(OBJDIR)/user/*.asm
 
 qemu:
-	qemu-system-i386 -hda kernel.img --curses -monitor stdio -smp $(CPUS)
+	qemu-system-i386 -hda kernel.img --curses -smp $(CPUS)
 
 debug:
-	qemu-system-i386 -hda kernel.img --curses -monitor stdio -s -S -smp $(CPUS)
+	qemu-system-i386 -hda kernel.img --curses -s -S -smp $(CPUS)
