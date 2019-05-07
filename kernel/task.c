@@ -305,33 +305,42 @@ void task_init()
 void task_init_percpu()
 {
 	int i;
+    int cpuN = cpunum();
 	extern int user_entry();
 	extern int idle_entry();
 	
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
-	memset(&(tss), 0, sizeof(tss));
-	tss.ts_esp0 = (uint32_t)bootstack + KSTKSIZE;
-	tss.ts_ss0 = GD_KD;
+	memset(&(cpus[cpuN].cpu_tss), 0, sizeof(cpus[cpuN].cpu_tss));
+	cpus[cpuN].cpu_tss.ts_esp0 = (uint32_t)percpu_kstacks[cpus[cpuN].cpu_id] + KSTKSIZE;
+	cpus[cpuN].cpu_tss.ts_ss0 = GD_KD;
 
 	// fs and gs stay in user data segment
-	tss.ts_fs = GD_UD | 0x03;
-	tss.ts_gs = GD_UD | 0x03;
+	cpus[cpuN].cpu_tss.ts_fs = GD_UD | 0x03;
+	cpus[cpuN].cpu_tss.ts_gs = GD_UD | 0x03;
 
 	/* Setup TSS in GDT */
-	gdt[GD_TSS0 >> 3] = SEG16(STS_T32A, (uint32_t)(&tss), sizeof(struct tss_struct), 0);
-	gdt[GD_TSS0 >> 3].sd_s = 0;
+	gdt[GD_TSS0 >> 3 + cpus[cpuN].cpu_id] = SEG16(STS_T32A, (uint32_t)(&(cpus[cpuN].cpu_tss)), sizeof(struct tss_struct), 0);
+	gdt[GD_TSS0 >> 3 + cpus[cpuN].cpu_id].sd_s = 0;
 
 	/* Setup first task */
 	i = task_create();
-	cur_task = &(tasks[i]);
+	cpus[cpuN].cpu_task = &(tasks[i]);
 
 	/* For user program */
-	setupvm(cur_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
-	setupvm(cur_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
-	setupvm(cur_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
-	setupvm(cur_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
-	cur_task->tf.tf_eip = (uint32_t)user_entry;
+	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)UTEXT_start, UTEXT_SZ);
+	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)UDATA_start, UDATA_SZ);
+	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)UBSS_start, UBSS_SZ);
+	setupvm(cpus[cpuN].cpu_task->pgdir, (uint32_t)URODATA_start, URODATA_SZ);
+    if (cpus[cpuN].cpu_id == bootcpu->cpu_id)
+    	cpus[cpuN].cpu_task->tf.tf_eip = (uint32_t)user_entry;
+    else
+    	cpus[cpuN].cpu_task->tf.tf_eip = (uint32_t)idle_entry;
+
+    /* Init per-CPU Runqueue */
+    cpus[cpuN].cpu_rq.task_list[0] = i;
+    cpus[cpuN].cpu_rq.task_counter = 1;
+    cpus[cpuN].cpu_rq.index = 0;
 
 	/* Load GDT&LDT */
 	lgdt(&gdt_pd);
@@ -340,5 +349,5 @@ void task_init_percpu()
 	// Load the TSS selector 
 	ltr(GD_TSS0);
 
-	cur_task->state = TASK_RUNNING;
+	cpus[cpuN].cpu_task->state = TASK_RUNNING;
 }
