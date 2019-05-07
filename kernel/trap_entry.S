@@ -40,7 +40,7 @@ TRAPHANDLER_NOEC(KBD_Input, IRQ_OFFSET+IRQ_KBD)
 TRAPHANDLER_NOEC(TIM_ISR, IRQ_OFFSET+IRQ_TIMER)
 
 /*
- * TODO: Lab 5
+ * Lab 5
  * Please add interface of system call
  */
 TRAPHANDLER(GPFLT, T_GPFLT)

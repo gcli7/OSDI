@@ -46,7 +46,7 @@ puts(const char *s, size_t len)
     syscall(SYS_puts,(uint32_t)s, len, 0, 0, 0);
 }
 
-/* TODO: Lab 5
+/* Lab 5
  * Please add interface needed for 
  * sleep, settextcolor, kill_self, fork, getpid, cls, get_num_free_page,
  * and get_num_used_page

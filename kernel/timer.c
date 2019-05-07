@@ -35,7 +35,7 @@ void timer_handler(struct Trapframe *tf)
 
     if (thiscpu->cpu_task != NULL)
     {
-        /* TODO: Lab 5
+        /* Lab 5
          * 1. Maintain the status of slept tasks
          *
          * 2. Change the state of the task if needed

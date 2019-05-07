@@ -142,7 +142,7 @@ env_pop_tf(struct Trapframe *tf)
 static void
 trap_dispatch(struct Trapframe *tf)
 {
-    /* TODO: Handle specific interrupts.
+    /*       Handle specific interrupts.
      *       You need to check the interrupt number in order to tell
      *       which interrupt is currently happening since every interrupt
      *       comes to this function called by default_trap_handler.
@@ -225,7 +225,7 @@ void default_trap_handler(struct Trapframe *tf)
 
 void trap_init()
 {
-    /* TODO: You should initialize the interrupt descriptor table.
+    /*       You should initialize the interrupt descriptor table.
      *       You should setup at least keyboard interrupt and timer interrupt as
      *       the lab's requirement.
      *
