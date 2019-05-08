@@ -52,9 +52,6 @@ void sched_yield(void)
 
     while (1) {
         queue_id = (queue_id + 1) % thiscpu->cpu_rq.task_counter;
-        if (queue_id == thiscpu->cpu_rq.index)
-            return;
-
         if (tasks[thiscpu->cpu_rq.task_list[queue_id]].state == TASK_RUNNABLE)
             break;
     }

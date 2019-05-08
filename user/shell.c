@@ -116,7 +116,7 @@ void task_job()
 
 	pid = getpid();
 	cid = getcid();
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < 5; i++)
 	{
 		cprintf("Pid=%d, Cid=%d, now=%d\n", pid, cid, i);
 		sleep(100);
@@ -158,7 +158,7 @@ int spinlocktest(int argc, char **argv)
     fork();
     fork();
     fork();
-    sleep(500);
+    sleep(250);
     cprintf("Pid=%d, Cid=%d\n", getpid(), getcid());
     /* task recycle */
     kill_self();
