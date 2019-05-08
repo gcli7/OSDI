@@ -190,9 +190,6 @@ void sys_kill(int pid)
                 thiscpu->cpu_rq.task_counter--;
                 break;
             }
-        if (i >= thiscpu->cpu_rq.task_counter)
-            return;
-            //panic("Kill a non-exist process.");
     /* Lab 5
    * Remember to change the state of tasks
    * Free the memory
