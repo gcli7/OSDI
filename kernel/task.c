@@ -6,6 +6,7 @@
 #include <kernel/task.h>
 #include <kernel/mem.h>
 #include <kernel/cpu.h>
+#include <kernel/spinlock.h>
 
 // Global descriptor table.
 //
@@ -66,6 +67,8 @@ uint32_t UDATA_SZ;
 uint32_t UBSS_SZ;
 uint32_t URODATA_SZ;
 
+struct spinlock task_lock;
+
 extern void sched_yield(void);
 
 
@@ -96,6 +99,7 @@ extern void sched_yield(void);
  */
 int task_create()
 {
+    spin_lock(&task_lock);
     Task *ts = NULL;
 
     /* Find a free task structure */
@@ -105,8 +109,10 @@ int task_create()
             ts = &tasks[index];
             break;
         }
-    if (!ts)
+    if (!ts) {
+        spin_unlock(&task_lock);
         return -1;
+    }
 
     /* Setup Page Directory and pages for kernel*/
     if (!(ts->pgdir = setupkvm()))
@@ -116,10 +122,14 @@ int task_create()
     int va;
     for (va = USTACKTOP - USR_STACK_SIZE; va < USTACKTOP; va += PGSIZE) {
         struct PageInfo *pi = page_alloc(1);
-        if (!pi)
+        if (!pi) {
+            spin_unlock(&task_lock);
             return -1;
-        if (page_insert(ts->pgdir, pi, va, PTE_W | PTE_U) != 0)
+        }
+        if (page_insert(ts->pgdir, pi, va, PTE_W | PTE_U) != 0) {
+            spin_unlock(&task_lock);
             return -1;
+        }
     }
 
     /* Setup Trapframe */
@@ -140,6 +150,7 @@ int task_create()
     ts->remind_ticks = TIME_QUANT;
     ts->state = TASK_RUNNABLE;
 
+    spin_unlock(&task_lock);
     return index;
 }
 
@@ -291,6 +302,7 @@ int sys_fork()
  */
 void task_init()
 {
+    spin_initlock(&task_lock);
     extern int user_entry();
 	int i;
     UTEXT_SZ = (uint32_t)(UTEXT_end - UTEXT_start);
