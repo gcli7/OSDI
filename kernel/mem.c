@@ -257,7 +257,6 @@ mem_init_mp(void)
     //             it will fault rather than overwrite another CPU's stack.
     //             Known as a "guard page".
     //     Permissions: kernel RW, user NONE
-    // TODO:
     // Lab6: Your code here:
     int i;
     for (i = 0; i < NCPU; i++)
@@ -297,7 +296,7 @@ page_init(void)
     // NB: DO NOT actually touch the physical memory corresponding to
     // free pages!
     
-    /* Lab6  TODO:
+    /* Lab6
      * 
      * modify your implementation to avoid adding the page at
      * MPENTRY_PADDR to the free list, so that we can safely
@@ -647,7 +646,7 @@ mmio_map_region(physaddr_t pa, size_t size)
     //
     // Hint: The TA solution uses boot_map_region.
     //
-    // Lab6 TODO
+    // Lab6
     // Your code here:
     if (base + size > MMIOLIM)
         panic("mmio_map_region overflow!");
@@ -672,7 +671,7 @@ setupvm(pde_t *pgdir, uint32_t start, uint32_t size)
  * You should map the kernel part memory with appropriate permission
  * Return a pointer to newly created page directory
  *
- * TODO: Lab6
+ * Lab6
  * You should also map:
  * 1. per-CPU kernel stack
  * 2. MMIO region for local apic

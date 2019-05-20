@@ -22,7 +22,7 @@
 */
 
 //
-// TODO: Lab6
+// Lab6
 // Modify your Round-robin scheduler to fit the multi-core
 // You should:
 //

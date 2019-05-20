@@ -20,7 +20,7 @@ void set_timer(int hz)
 
 /* It is timer interrupt handler */
 //
-// TODO: Lab6
+// Lab6
 // Modify your timer_handler to support Multi processor
 // Don't forget to acknowledge the interrupt using lapic_eoi()
 //

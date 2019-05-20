@@ -184,7 +184,7 @@ static void task_free(int pid)
     pgdir_remove(tasks[pid].pgdir);
 }
 
-// Lab6 TODO
+// Lab6
 //
 // Modify it so that the task will be removed form cpu runqueue
 // ( we not implement signal yet so do not try to kill process
@@ -241,7 +241,7 @@ void sys_kill(int pid)
  */
 
 //
-// Lab6 TODO:
+// Lab6
 //
 // Modify it so that the task will disptach to different cpu runqueue
 // (please try to load balance, don't put all task into one cpu)
@@ -320,7 +320,7 @@ void task_init()
 	task_init_percpu();
 }
 
-// Lab6 TODO
+// Lab6
 //
 // Please modify this function to:
 //

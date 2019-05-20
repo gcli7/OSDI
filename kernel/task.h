@@ -29,7 +29,7 @@ typedef struct
     
 } Task;
 
-// TODO Lab6
+// Lab6
 // 
 // Design your Runqueue structure for cpu
 // your runqueue sould have at least two

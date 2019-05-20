@@ -10,7 +10,12 @@
 #include <kernel/timer.h>
 #include <kernel/cpu.h>
 
+#include <fs.h>
+
+extern void fs_test();
 extern void init_video(void);
+extern int disk_init();
+extern void disk_test();
 static void boot_aps(void);
 
 void kernel_main(void)
@@ -29,7 +34,11 @@ void kernel_main(void)
     kbd_init();
     timer_init();
     syscall_init();
-    task_init();
+	disk_init();
+	disk_test();
+	/*TODO: Lab7, uncommend it when you finish Lab7 3.1 part */
+	// fs_test();
+	// fs_init();
     boot_aps();
 
     printk("Kernel code base start=0x%08x to = 0x%08x\n", stext, etext);
@@ -62,7 +71,7 @@ void *mpentry_kstack;
 static void
 boot_aps(void)
 {
-    // TODO: Lab6
+    // Lab6
     //
     // 1. Write AP entry code (kernel/mpentry.S) to unused memory
     //    at MPENTRY_PADDR. (use memmove() in lib/string.c)
@@ -137,7 +146,7 @@ mp_main(void)
      *
      * 5. Per-CPU Runqueue
      *
-     * TODO: Lab6
+     * Lab6
      *
      * 1. Modify mem_init_mp() (in kernel/mem.c) to map per-CPU stacks.
      *    Your code should pass the new check in check_kern_pgdir().
@@ -164,7 +173,7 @@ mp_main(void)
     task_init_percpu();
     lidt(&idt_pd);
 
-    // TODO: Lab6
+    // Lab6
     // Now that we have finished some basic setup, it's time to tell
     // boot_aps() we're up ( using xchg )
     // Your code here:
