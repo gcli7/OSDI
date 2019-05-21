@@ -112,7 +112,7 @@ int fat_lseek(struct fs_fd* file, off_t offset)
 {
     return -f_lseek(file->data, offset);
 }
-int fat_unlink(struct fs_fd* file, const char *pathname)
+int fat_unlink(const char *pathname)
 {
     return -f_unlink(pathname);
 }

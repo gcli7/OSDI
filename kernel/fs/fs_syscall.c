@@ -55,16 +55,10 @@ int sys_open(const char *file, int flags, int mode)
     if (!file)
         return -STATUS_EINVAL;
 
-    int i;
-    for (i = 0; i < FS_FD_MAX; i++)
-        if (!strcmp(file, fd_table[i].path)) {
-            fd_table[i].ref_count += 1;
-            return i;
-        }
-
     int fd = fd_new();
     if (fd == -1)
-        return -STATUS_ENOSPC;
+        return fd;
+        //return -STATUS_ENOSPC;
 
     int retval = file_open(&fd_table[fd], file, flags);
     if (retval < 0) {
