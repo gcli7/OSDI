@@ -66,6 +66,8 @@ DSTATUS disk_initialize (BYTE pdrv)
   /* Note: You can create a function under disk.c  
    *       to help you get the disk status.
    */
+  disk_init();
+  return get_status();
 }
 
 /**
@@ -82,6 +84,7 @@ DSTATUS disk_status (BYTE pdrv)
 /* Note: You can create a function under disk.c  
  *       to help you get the disk status.
  */
+  return get_status();
 }
 
 /**
@@ -101,6 +104,12 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)
     BYTE *ptr = buff;
     UINT cur_sector = sector;
     /* TODO */
+    for ( ; i > 0 && !err; i--) {
+        err = ide_read_sectors(DISK_ID, 1, cur_sector, ptr);
+        cur_sector++;
+        ptr += 512;
+    }
+    return err;
 }
 
 /**
@@ -120,7 +129,12 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
     BYTE *ptr = buff;
     UINT cur_sector = sector;
     /* TODO */    
-
+    for ( ; i > 0 && !err; i--) {
+        err = ide_write_sectors(DISK_ID, 1, cur_sector, ptr);
+        cur_sector++;
+        ptr += 512;
+    }
+    return err;
 }
 
 /**
@@ -137,7 +151,12 @@ DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 {
     uint32_t *retVal = (uint32_t *)buff;
-    /* TODO */    
+    /* TODO */
+    if (cmd == GET_SECTOR_COUNT)
+        *retVal = 65535;
+    else if (cmd == GET_BLOCK_SIZE)
+        *retVal = 512;
+    return RES_OK;
 }
 
 /**
@@ -147,4 +166,5 @@ DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)
 DWORD get_fattime (void)
 {
     /* TODO */
+    return sys_get_ticks();
 }
