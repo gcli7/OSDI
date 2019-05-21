@@ -74,7 +74,7 @@ int sys_close(int fd)
 {
     /* TODO */
     if (fd < 0 || fd >= FS_FD_MAX)
-        return -STATUS_EBADF;
+        return -STATUS_EINVAL;
 
     int retval;
     if (fd_table[fd].ref_count == 1) {
@@ -115,10 +115,8 @@ int sys_write(int fd, const void *buf, size_t len)
 off_t sys_lseek(int fd, off_t offset, int whence)
 {
     /* TODO */
-    if (offset < 0 || whence < 0)
+    if (offset < 0 || whence < 0 || fd < 0 || fd >= FS_FD_MAX)
         return -STATUS_EINVAL;
-    if (fd < 0 || fd >= FS_FD_MAX)
-        return -STATUS_EBADF;
 
     int new_offset = 0;
     switch(whence) {
