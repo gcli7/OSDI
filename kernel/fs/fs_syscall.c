@@ -134,7 +134,10 @@ off_t sys_lseek(int fd, off_t offset, int whence)
     }
 
     fd_table[fd].pos = new_offset;
-    return file_lseek(&fd_table[fd], new_offset);
+    int retval = file_lseek(&fd_table[fd], new_offset);
+    if (!retval)
+        return new_offset;
+    return retval;
 }
 
 int sys_unlink(const char *pathname)
