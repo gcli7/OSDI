@@ -1,6 +1,7 @@
 #ifndef USR_SYSCALL_H
 #define USR_SYSCALL_H
 #include <inc/types.h>
+#include <kernel/fs/fat/ff.h>
 
 /* system call numbers */
 enum {
@@ -22,30 +23,23 @@ enum {
     SYS_write,
     SYS_lseek,
     SYS_unlink,
+    SYS_opendir,
     SYS_readdir,
+    SYS_closedir,
+    SYS_stat,
     NSYSCALLS
 };
 
 int32_t get_num_used_page(void);
-
 int32_t cls(void);
-
 int32_t get_num_free_page(void);
-
 unsigned long get_ticks(void);
-
 void settextcolor(unsigned char forecolor, unsigned char backcolor);
-
 int32_t fork(void);
-
 int32_t getpid(void);
-
 int32_t getcid(void);
-
 void kill_self();
-
 void sleep(uint32_t ticks);
-
 void puts(const char *s, size_t len);
 int getc(void);
 
@@ -56,5 +50,9 @@ int sys_read(int fd, void *buf, size_t len);
 int sys_write(int fd, const void *buf, size_t len);
 off_t sys_lseek(int fd, off_t offset, int whence);
 int sys_unlink(const char *pathname);
-int sys_readdir(int fd,  char *buf ,int *type, unsigned long *size);
+int sys_opendir(DIR *dir, const char *pathname);
+//int sys_readdir(int fd,  char *buf ,int *type, unsigned long *size);
+int sys_readdir(DIR *dir, FILINFO *fno);
+int sys_closedir(DIR *dir);
+int sys_stat(const char *pathname, FILINFO *fno);
 #endif

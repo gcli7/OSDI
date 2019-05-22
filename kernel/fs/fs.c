@@ -199,6 +199,24 @@ int file_unlink(const char *path)
     return convert_retval(retval);
 }
 
+int file_opendir(DIR *dir, const char *pathname)
+{
+    return convert_retval(fat_fs.ops->opendir(dir, pathname));
+}
+
+int file_readdir(DIR *dir, FILINFO *fno)
+{
+    return convert_retval(fat_fs.ops->readdir(dir, fno));
+}
+
+int file_closedir(DIR *dir)
+{
+    return convert_retval(fat_fs.ops->closedir(dir));
+}
+
+int file_stat(const char *pathname, FILINFO *fno) {
+    return convert_retval(fat_fs.ops->stat(pathname, fno));
+}
 
 /**
  * @ingroup Fd

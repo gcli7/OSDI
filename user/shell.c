@@ -3,6 +3,7 @@
 #include <inc/string.h>
 #include <inc/shell.h>
 #include <inc/assert.h> 
+#include <kernel/fs/fat/ff.h>
 
 char hist[SHELL_HIST_MAX][BUF_LEN];
 
@@ -388,6 +389,7 @@ int filetest5(int argc, char **argv)
     {
         cprintf(" %c", buf[i]);
     }
+    cprintf("\n");
 
     ret = close(fd);
     uassert(ret == STATUS_OK);
@@ -536,9 +538,36 @@ int fs_speed_test(int argc, char **argv)
     }
 }
 
+/* Only support single file or path. */
 int ls(int argc, char **argv) {
+    DIR dir;
+    FILINFO fno;
+    int retval;
+    char path[32] = {"/"};
+
+    if (argc > 1)
+        strcpy(path, argv[1]);
+    retval = opendir(&dir, path);
+    if (retval < 0) {
+        if (stat(path, &fno) < 0)
+            cprintf("File or Path not exist.\n");
+        else
+            cprintf("type = FILE, name = %s, size = %d\n", fno.fname, fno.fsize);
+        return 0;
+    }
+
+    readdir(&dir, &fno);
+    while(strlen(fno.fname)){
+        if (fno.fattrib == 32)
+            cprintf("type = FILE, name = %s, size = %d\n", fno.fname, fno.fsize);
+        else
+            cprintf("type = DIR, name = %s, size = %d\n", fno.fname, fno.fsize);
+        readdir(&dir, &fno);
+    }
+    closedir(&dir);
 }
 
+/* Support multiple files. */
 int rm(int argc, char **argv) {
     int i, retval;
     for (i = 1; i < argc; i++) {
@@ -549,6 +578,7 @@ int rm(int argc, char **argv) {
     return 0;
 }
 
+/* Support multiple files. */
 int touch(int argc, char **argv) {
     int i, fd;
     for (i = 1; i < argc; i++) {

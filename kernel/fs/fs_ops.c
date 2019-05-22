@@ -45,14 +45,12 @@ extern struct fs_dev fat_fs;
 /* Note: 1. Get FATFS object from fs->data
 *        2. Check fs->path parameter then call f_mount.
 */
-int fat_mount(struct fs_dev *fs, const void* data)
-{
+int fat_mount(struct fs_dev *fs, const void* data) {
     return -f_mount(fs->data, fs->path, 1);
 }
 
 /* Note: Just call f_mkfs at root path '/' */
-int fat_mkfs(const char* device_name)
-{
+int fat_mkfs(const char* device_name) {
     return -f_mkfs("/", 0, 0);
 }
 
@@ -60,8 +58,7 @@ int fat_mkfs(const char* device_name)
 *        Example: if file->flags == O_RDONLY then open_mode = FA_READ
 *                 if file->flags & O_APPEND then f_seek the file to end after f_open
 */
-int fat_open(struct fs_fd* file)
-{
+int fat_open(struct fs_fd* file) {
     int flag = 0;
     if(file->flags == O_RDONLY)
         flag |= FA_READ;
@@ -69,8 +66,6 @@ int fat_open(struct fs_fd* file)
         flag |= FA_WRITE;
     if(file->flags & O_RDWR)
         flag |= FA_READ | FA_WRITE;
-    if(file->flags & O_ACCMODE)
-        flag &= 0x3;
     if((file->flags & O_CREAT) && !(file->flags & O_TRUNC))
         flag |= FA_CREATE_NEW;
     if(file->flags & O_TRUNC)
@@ -82,12 +77,11 @@ int fat_open(struct fs_fd* file)
     return -retval;
 }
 
-int fat_close(struct fs_fd* file)
-{
+int fat_close(struct fs_fd* file) {
     return -f_close(file->data);
 }
-int fat_read(struct fs_fd* file, void* buf, size_t count)
-{
+
+int fat_read(struct fs_fd* file, void* buf, size_t count) {
     unsigned int len;
     int retval = f_read(file->data, buf, count, &len);
     if (retval)
@@ -96,8 +90,8 @@ int fat_read(struct fs_fd* file, void* buf, size_t count)
     file->pos += len;
     return len;
 }
-int fat_write(struct fs_fd* file, const void* buf, size_t count)
-{
+
+int fat_write(struct fs_fd* file, const void* buf, size_t count) {
     unsigned int len;
     int retval = f_write(file->data, buf, count, &len);
     if (retval)
@@ -108,13 +102,29 @@ int fat_write(struct fs_fd* file, const void* buf, size_t count)
         file->size = file->pos;
     return len;
 }
-int fat_lseek(struct fs_fd* file, off_t offset)
-{
+
+int fat_lseek(struct fs_fd* file, off_t offset) {
     return -f_lseek(file->data, offset);
 }
-int fat_unlink(const char *pathname)
-{
+
+int fat_unlink(const char *pathname) {
     return -f_unlink(pathname);
+}
+
+int fat_opendir(DIR *dir, const char *pathname) {
+    return -f_opendir(dir, pathname);
+}
+
+int fat_readdir(DIR *dir,  FILINFO *fno) {
+    return -f_readdir(dir, fno);
+}
+
+int fat_closedir(DIR *dir) {
+    return -f_closedir(dir);
+}
+
+int fat_stat(const char *pathname, FILINFO *fno) {
+    return -f_stat(pathname, fno);
 }
 
 struct fs_ops elmfat_ops = {
@@ -126,5 +136,9 @@ struct fs_ops elmfat_ops = {
     .read = fat_read,
     .write = fat_write,
     .lseek = fat_lseek,
-    .unlink = fat_unlink
+    .unlink = fat_unlink,
+    .opendir = fat_opendir,
+    .readdir = fat_readdir,
+    .closedir = fat_closedir,
+    .stat = fat_stat
 };

@@ -48,8 +48,7 @@
 
 extern struct fs_fd fd_table[FS_FD_MAX];
 // Below is POSIX like I/O system call 
-int sys_open(const char *file, int flags, int mode)
-{
+int sys_open(const char *file, int flags, int mode) {
     //We dont care the mode.
     /* TODO */
     if (!file)
@@ -70,8 +69,7 @@ int sys_open(const char *file, int flags, int mode)
     return fd;
 }
 
-int sys_close(int fd)
-{
+int sys_close(int fd) {
     /* TODO */
     if (fd < 0 || fd >= FS_FD_MAX)
         return -STATUS_EINVAL;
@@ -86,8 +84,8 @@ int sys_close(int fd)
     fd_put(&fd_table[fd]);
     return retval;
 }
-int sys_read(int fd, void *buf, size_t len)
-{
+
+int sys_read(int fd, void *buf, size_t len) {
     /* TODO */
     if (len < 0 || !buf)
         return -STATUS_EINVAL;
@@ -99,8 +97,8 @@ int sys_read(int fd, void *buf, size_t len)
         return file_read(&fd_table[fd], buf, actual_len);
     return file_read(&fd_table[fd], buf, len);
 }
-int sys_write(int fd, const void *buf, size_t len)
-{
+
+int sys_write(int fd, const void *buf, size_t len) {
     /* TODO */
     if (len < 0 || !buf)
         return -STATUS_EINVAL;
@@ -112,8 +110,7 @@ int sys_write(int fd, const void *buf, size_t len)
 }
 
 /* Note: Check the whence parameter and calcuate the new offset value before do file_seek() */
-off_t sys_lseek(int fd, off_t offset, int whence)
-{
+off_t sys_lseek(int fd, off_t offset, int whence) {
     /* TODO */
     if (offset < 0 || whence < 0 || fd < 0 || fd >= FS_FD_MAX)
         return -STATUS_EINVAL;
@@ -138,10 +135,25 @@ off_t sys_lseek(int fd, off_t offset, int whence)
     return retval;
 }
 
-int sys_unlink(const char *pathname)
-{
+int sys_unlink(const char *pathname) {
     /* TODO */ 
     if (!pathname)
         return -STATUS_EINVAL;
     return file_unlink(pathname);
+}
+
+int sys_opendir(DIR *dir, const char *pathname) {
+    return file_opendir(dir, pathname);
+}
+
+int sys_readdir(DIR *dir, FILINFO *fno) {
+    return file_readdir(dir, fno);
+}
+
+int sys_closedir(DIR *dir) {
+    return file_closedir(dir);
+}
+
+int sys_stat(const char *pathname, FILINFO *fno) {
+    return file_stat(pathname, fno);
 }
