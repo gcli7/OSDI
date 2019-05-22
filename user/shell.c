@@ -27,6 +27,9 @@ int filetest3(int argc, char **argv);
 int filetest4(int argc, char **argv);
 int filetest5(int argc, char **argv);
 int spinlocktest(int argc, char **argv);
+int ls(int argc, char **argv);
+int rm(int argc, char **argv);
+int touch(int argc, char **argv);
 
 
 struct Command commands[] = {
@@ -42,7 +45,10 @@ struct Command commands[] = {
   { "filetest3", "Laqrge block test", filetest3},
   { "filetest4", "Error test", filetest4},
   { "filetest5", "unlink test", filetest5},
-  { "spinlocktest", "Test spinlock", spinlocktest }
+  { "spinlocktest", "Test spinlock", spinlocktest },
+  { "ls", "Lab7 TODO: ls", ls},
+  { "rm", "Lab7 TODO: rm", rm},
+  { "touch", "Lab7 TODO: touch", touch}
 };
 const int NCOMMANDS = (sizeof(commands)/sizeof(commands[0]));
 
@@ -528,6 +534,30 @@ int fs_speed_test(int argc, char **argv)
         /* close file */
         close(fd);
     }
+}
+
+int ls(int argc, char **argv) {
+}
+
+int rm(int argc, char **argv) {
+    int i, retval;
+    for (i = 1; i < argc; i++) {
+        retval = unlink(argv[i]);
+        if (retval < 0)
+            cprintf("Cannot rm %s\n", argv[i]);
+    }
+    return 0;
+}
+
+int touch(int argc, char **argv) {
+    int i, fd;
+    for (i = 1; i < argc; i++) {
+        fd = open(argv[i], O_WRONLY | O_CREAT, 0);
+        if (fd < 0)
+            cprintf("Cannot touch %s\n", argv[i]);
+        close(fd);
+    }
+    return 0;
 }
 
 void shell()
